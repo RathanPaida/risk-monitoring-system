@@ -84,7 +84,32 @@ curl -u manager1:Manager123! -X POST http://localhost:8080/api/admin/replay
 cd backend
 mvn test
 # Result: 31 tests passing (Rule tests, Security RBAC, State Machine, and Audit Log Immutability)
+
+# 8. Train and Evaluate Machine Learning Model (Isolation Forest)
+cd ..
+python ml/train_isolation_forest.py
+python ml/evaluate.py --port 5433
+# Runs out-of-time evaluation benchmarking Rules vs ML, produces ml/reports/evaluation.md & PNG plots
 ```
+
+---
+
+## Machine Learning & Evaluation Benchmark
+
+We benchmarked the **Deterministic Rule Engine (4 rules)** against an **Unsupervised Isolation Forest** model and an **Ensemble Hybrid (Rules OR ML)** on an out-of-time test split of **24,150 transactions** (20.7 days, 399 ground-truth frauds):
+
+| Detection Strategy | Precision | Recall | F1 Score | False Positive Rate (FPR) | Total Alerts | Alerts / Day |
+|---|---|---|---|---|---|---|
+| **Rules Only** | 33.38% | 64.91% | 0.4409 | 2.18% | 776 | 37.4 |
+| **Isolation Forest (ML)** | 27.05% | 40.60% | 0.3246 | 1.84% | 599 | 28.9 |
+| **Combined (Rules OR ML)** | 24.59% | **67.42%** | 0.3603 | 3.47% | 1,094 | 52.7 |
+
+### Visualizations & Detailed Report
+- **Metrics Comparison Plot:** `ml/reports/metrics_comparison.png`
+- **Analyst Workload Trade-off Plot:** `ml/reports/workload_tradeoff.png`
+- **Full In-Depth Report:** See [ml/reports/evaluation.md](ml/reports/evaluation.md) for detailed discussion on where deterministic rules outperform ML (auditability, deterministic edge cases), where Isolation Forest wins (subtle multi-dimensional shifts), and real-world triage trade-offs.
+
+---
 
 ### 4. Interactive Swagger UI
 Access the Swagger UI at:

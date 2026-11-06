@@ -155,7 +155,7 @@ def generate_dataset(
         t_time = timestamps[i]
         
         # Check if this point triggers a velocity burst fraud
-        if i in burst_points and fraud_count < target_fraud_count - 10:
+        if i in burst_points:
             acc_id = np.random.choice(account_ids, p=account_weights)
             cust_id = account_to_customer[acc_id]
             dev_id = customer_device_map[cust_id][0]
@@ -202,12 +202,11 @@ def generate_dataset(
         merch_id = random.randint(1, num_merchants)
         country = home_country
 
-        # Determine if this transaction is an injected fraud
+        # Determine if this transaction is an injected fraud (uniform distribution)
         is_fraud = False
         fraud_type = "none"
 
-        # If we need more fraud, select with small probability
-        if fraud_count < target_fraud_count and random.random() < 0.018:
+        if random.random() < 0.009:
             is_fraud = True
             f_choice = random.choices(
                 ["amount_spike", "foreign_country", "new_device_large", "mixed", "subtle"],
