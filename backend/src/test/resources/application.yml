@@ -32,3 +32,12 @@ rules:
   new-device:
     min-amount-low: 200.0
     min-amount-medium: 1000.0
+
+aws:
+  region: us-east-1
+  s3:
+    enabled: false
+    bucket-name: test-bucket
+  dynamodb:
+    enabled: false
+    table-name: test-ingestion-jobs

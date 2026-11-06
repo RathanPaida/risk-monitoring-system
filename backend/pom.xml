@@ -22,7 +22,20 @@
         <springdoc.version>2.5.0</springdoc.version>
         <testcontainers.version>1.19.7</testcontainers.version>
         <jacoco.version>0.8.11</jacoco.version>
+        <aws.sdk.version>2.25.35</aws.sdk.version>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>software.amazon.awssdk</groupId>
+                <artifactId>bom</artifactId>
+                <version>${aws.sdk.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <!-- Spring Boot Starters -->
@@ -70,6 +83,16 @@
             <version>${springdoc.version}</version>
         </dependency>
 
+        <!-- AWS SDK v2 (S3 and DynamoDB) -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>dynamodb</artifactId>
+        </dependency>
+
         <!-- Testing -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -114,7 +137,7 @@
                 <version>${jacoco.version}</version>
                 <configuration>
                     <excludes>
-                        <exclude>com/rathan/riskmonitor/config/**</exclude>
+                        <exclude>com/rathan/riskmonitor/**/config/**</exclude>
                         <exclude>com/rathan/riskmonitor/RiskMonitorApplication.class</exclude>
                         <exclude>com/rathan/riskmonitor/**/dto/**</exclude>
                     </excludes>

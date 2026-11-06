@@ -26,6 +26,14 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+      localstack:
+        image: localstack/localstack:latest
+        ports:
+          - 4566:4566
+        env:
+          SERVICES: s3,dynamodb
+          AWS_DEFAULT_REGION: us-east-1
+
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -47,6 +55,10 @@ jobs:
           DB_NAME: riskmonitor
           DB_USER: postgres
           DB_PASSWORD: postgres
+          AWS_ENDPOINT: http://localhost:4566
+          AWS_REGION: us-east-1
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
 
   ml:
     name: ML Pipeline & Evaluation (Python 3.11)

@@ -92,6 +92,30 @@ public class TransactionService {
         return new BulkTransactionResponse(count, totalAlerts);
     }
 
+    @Transactional
+    public BulkTransactionResponse ingestBatchIdempotent(List<TransactionRequest> requests) {
+        if (requests == null || requests.isEmpty()) {
+            return new BulkTransactionResponse(0, 0);
+        }
+
+        int processed = 0;
+        int alerts = 0;
+
+        for (TransactionRequest req : requests) {
+            if (req.getId() != null && transactionRepository.existsById(req.getId())) {
+                continue;
+            }
+            try {
+                TransactionResponse resp = ingestTransaction(req);
+                alerts += resp.getAlertsGenerated();
+                processed++;
+            } catch (org.springframework.dao.DataIntegrityViolationException ex) {
+                // Idempotently skip duplicate insert if concurrently added
+            }
+        }
+        return new BulkTransactionResponse(processed, alerts);
+    }
+
     @Transactional(readOnly = true)
     public TransactionResponse getTransaction(Long id) {
         Transaction txn = transactionRepository.findById(id)

@@ -47,3 +47,22 @@ rules:
   new-device:
     min-amount-low: 200.0
     min-amount-medium: 1000.0
+
+# AWS S3 and DynamoDB Ingestion Configuration
+aws:
+  region: ${AWS_REGION:us-east-1}
+  endpoint: ${AWS_ENDPOINT:}
+  access-key-id: ${AWS_ACCESS_KEY_ID:test}
+  secret-access-key: ${AWS_SECRET_ACCESS_KEY:test}
+  s3:
+    enabled: ${AWS_S3_ENABLED:true}
+    bucket-name: ${AWS_S3_BUCKET:risk-monitoring-bucket}
+    incoming-prefix: ${AWS_S3_INCOMING_PREFIX:incoming/}
+    processed-prefix: ${AWS_S3_PROCESSED_PREFIX:processed/}
+    failed-prefix: ${AWS_S3_FAILED_PREFIX:failed/}
+    poll-rate-ms: ${AWS_S3_POLL_RATE_MS:60000}
+    worker-threads: ${AWS_S3_WORKER_THREADS:4}
+  dynamodb:
+    enabled: ${AWS_DYNAMODB_ENABLED:true}
+    table-name: ${AWS_DYNAMODB_TABLE:ingestion_jobs}
+    lease-duration-seconds: ${AWS_DYNAMODB_LEASE_DURATION:300}
