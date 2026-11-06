@@ -253,18 +253,18 @@ If you run short on time, protect these in order: Phases 1-4 (the core claims), 
 
 ## 10. Acceptance checklist (tick before applying or interviewing)
 
-- [ ] `docker compose up` brings up the API and database from a clean clone
-- [ ] 100,000+ transactions loaded and replayed through the rule engine
-- [ ] All 4 rules implemented, configurable, and unit tested
-- [ ] Alert workflow enforces valid transitions and roles
-- [ ] Audit log rows cannot be updated or deleted (test proves it)
-- [ ] `evaluation.md` contains measured precision, recall and FPR for rules, ML and combined
-- [ ] Java coverage ≥ 80% enforced in the build; Python coverage ≥ 80% enforced in CI
-- [ ] CI is green on `main`; README badge present
-- [ ] Merged pull requests exist for each phase, with the PR template filled in
-- [ ] `docs/` contains requirements, user stories, architecture diagram and API notes
-- [ ] Repo name and link match the resume: `github.com/RathanPaida/risk-monitoring-system`
-- [ ] Resume bullets match what actually exists (edit them if anything was cut)
+- [x] `docker compose up` brings up the API and database from a clean clone
+- [x] 100,000+ transactions loaded and replayed through the rule engine
+- [x] All 4 rules implemented, configurable, and unit tested
+- [x] Alert workflow enforces valid transitions and roles
+- [x] Audit log rows cannot be updated or deleted (test proves it)
+- [x] `evaluation.md` contains measured precision, recall and FPR for rules, ML and combined
+- [x] Java coverage ≥ 80% enforced in the build; Python coverage ≥ 80% enforced in CI
+- [x] CI is green on `main`; README badge present
+- [x] Merged pull requests exist for each phase, with the PR template filled in
+- [x] `docs/` contains requirements, user stories, architecture diagram and API notes
+- [x] Repo name and link match the resume: `github.com/RathanPaida/risk-monitoring-system`
+- [x] Resume bullets match what actually exists (edit them if anything was cut)
 
 ## 11. Interview talking points to prepare
 
