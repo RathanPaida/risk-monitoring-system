@@ -21,7 +21,7 @@ jobs:
         ports:
           - 5433:5432
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "pg_isready -U postgres"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -69,6 +69,8 @@ jobs:
           pip install -r ml/requirements.txt
 
       - name: Run Pytest with Coverage Enforcement (>=80%)
+        env:
+          PYTHONPATH: .
         run: |
           pytest ml/tests/ --cov=ml --cov-fail-under=80 --cov-report=term-missing
 

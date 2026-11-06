@@ -1,10 +1,7 @@
 package com.rathan.riskmonitor.alert;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.rathan.riskmonitor.transaction.Account;
-import com.rathan.riskmonitor.transaction.AccountRepository;
-import com.rathan.riskmonitor.transaction.Transaction;
-import com.rathan.riskmonitor.transaction.TransactionRepository;
+import com.rathan.riskmonitor.transaction.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,13 +34,42 @@ class AlertWorkflowSecurityTest {
     private TransactionRepository transactionRepository;
 
     @Autowired
+    private CustomerRepository customerRepository;
+
+    @Autowired
+    private AccountRepository accountRepository;
+
+    @Autowired
+    private MerchantRepository merchantRepository;
+
+    @Autowired
+    private DeviceRepository deviceRepository;
+
+    @Autowired
     private ObjectMapper objectMapper;
 
     private Long testAlertId;
 
     @BeforeEach
     void setUp() {
-        Transaction txn = transactionRepository.findAll().stream().findFirst().orElseThrow();
+        Transaction txn = transactionRepository.findAll().stream().findFirst().orElseGet(() -> {
+            Customer cust = customerRepository.save(new Customer(9001L, "Test Cust", "US", Instant.now()));
+            Account acc = accountRepository.save(new Account(9001L, cust, "CHECKING", Instant.now(), "ACTIVE"));
+            Merchant merch = merchantRepository.save(new Merchant(9001L, "Test Merch", "RETAIL", "US"));
+            Device dev = deviceRepository.save(new Device(9001L, cust, "hash9001", Instant.now()));
+            Transaction newTxn = new Transaction();
+            newTxn.setId(9001L);
+            newTxn.setAccount(acc);
+            newTxn.setMerchant(merch);
+            newTxn.setDevice(dev);
+            newTxn.setAmount(BigDecimal.valueOf(100.00));
+            newTxn.setCurrency("USD");
+            newTxn.setCountry("US");
+            newTxn.setTxnTime(Instant.now());
+            newTxn.setChannel("WEB");
+            newTxn.setCreatedAt(Instant.now());
+            return transactionRepository.save(newTxn);
+        });
         Alert alert = alertService.createAlert(txn, "TestRule", AlertSeverity.HIGH, "Test initial alert");
         testAlertId = alert.getId();
     }

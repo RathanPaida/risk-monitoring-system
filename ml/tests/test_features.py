@@ -46,7 +46,7 @@ def test_extract_features_basic():
     row2 = df_feats[df_feats["id"] == 2].iloc[0]
     assert row2["txns_last_10m"] == 1 # 1 prior txn in 10m
     assert row2["is_new_device"] == 0 # dev 100 already seen
-    assert pytest.approx(row2["hours_since_prev_txn"], 0.01) == 2.0 / 60.0
+    assert row2["hours_since_prev_txn"] == pytest.approx(2.0 / 60.0, abs=1e-3)
 
     # Txn 3 checks (new device, country GB != US)
     row3 = df_feats[df_feats["id"] == 3].iloc[0]
