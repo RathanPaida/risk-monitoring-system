@@ -71,8 +71,14 @@ mvn clean spring-boot:run
 # 4. Load Data into PostgreSQL (loads 105,000 txns & reference tables)
 python ml/load_data.py --port 5433
 
-# 5. Verify PostgreSQL Transaction Count
-# SELECT count(*) FROM transactions; (Returns 105,000)
+# 5. Replay Historical Transactions through Rule Engine
+curl -u manager1:Manager123! -X POST http://localhost:8080/api/admin/replay
+# Output: {"totalTransactions": 105000, "alertsGenerated": 4102, "executionTimeMs": 1233}
+
+# 6. Verify PostgreSQL Transaction & Alert Counts
+# SELECT count(*) FROM transactions;  --> 105,000
+# SELECT count(*) FROM alerts;        --> 4,102
+# SELECT count(*) FROM audit_log;     --> 4,102
 ```
 
 ### 4. Interactive Swagger UI

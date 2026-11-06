@@ -1,21 +1,25 @@
 package com.rathan.riskmonitor.transaction;
 
 import com.rathan.riskmonitor.alert.Alert;
+import com.rathan.riskmonitor.alert.AlertSeverity;
+import com.rathan.riskmonitor.alert.AlertStatus;
 import com.rathan.riskmonitor.common.ResourceNotFoundException;
+import com.rathan.riskmonitor.rules.FastReplayContext;
+import com.rathan.riskmonitor.rules.Rule;
 import com.rathan.riskmonitor.rules.RuleEngine;
+import com.rathan.riskmonitor.rules.RuleHit;
 import com.rathan.riskmonitor.transaction.dto.BulkTransactionResponse;
 import com.rathan.riskmonitor.transaction.dto.TransactionRequest;
 import com.rathan.riskmonitor.transaction.dto.TransactionResponse;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.PreparedStatement;
+import java.sql.Statement;
+import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,20 +29,26 @@ public class TransactionService {
     private final AccountRepository accountRepository;
     private final MerchantRepository merchantRepository;
     private final DeviceRepository deviceRepository;
+    private final CustomerRepository customerRepository;
     private final RuleEngine ruleEngine;
+    private final JdbcTemplate jdbcTemplate;
 
     public TransactionService(
             TransactionRepository transactionRepository,
             AccountRepository accountRepository,
             MerchantRepository merchantRepository,
             DeviceRepository deviceRepository,
-            RuleEngine ruleEngine
+            CustomerRepository customerRepository,
+            RuleEngine ruleEngine,
+            JdbcTemplate jdbcTemplate
     ) {
         this.transactionRepository = transactionRepository;
         this.accountRepository = accountRepository;
         this.merchantRepository = merchantRepository;
         this.deviceRepository = deviceRepository;
+        this.customerRepository = customerRepository;
         this.ruleEngine = ruleEngine;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     @Transactional
@@ -92,26 +102,97 @@ public class TransactionService {
     @Transactional
     public Map<String, Object> replayAllTransactions() {
         long startTime = System.currentTimeMillis();
-        int pageSize = 1000;
-        int pageNumber = 0;
-        long totalProcessed = 0;
-        int totalAlerts = 0;
 
-        Page<Transaction> page;
-        do {
-            page = transactionRepository.findAll(PageRequest.of(pageNumber, pageSize, org.springframework.data.domain.Sort.by("txnTime").ascending()));
-            for (Transaction txn : page.getContent()) {
-                List<Alert> alerts = ruleEngine.processTransaction(txn);
-                totalAlerts += alerts.size();
-                totalProcessed++;
+        List<Customer> customers = customerRepository.findAll();
+        FastReplayContext replayContext = new FastReplayContext(customers);
+        List<Rule> rules = ruleEngine.getRules();
+
+        String selectSql = "SELECT t.id, t.account_id, t.merchant_id, t.device_id, t.amount, t.currency, t.country, t.txn_time, t.channel, " +
+                "a.customer_id, c.home_country " +
+                "FROM transactions t " +
+                "JOIN accounts a ON t.account_id = a.id " +
+                "JOIN customers c ON a.customer_id = c.id " +
+                "ORDER BY t.txn_time ASC";
+
+        List<Object[]> pendingAlerts = new ArrayList<>();
+        int[] counter = new int[2]; // [totalProcessed, alertsGenerated]
+
+        jdbcTemplate.query(selectSql, rs -> {
+            Transaction txn = new Transaction();
+            txn.setId(rs.getLong("id"));
+
+            Account acc = new Account();
+            acc.setId(rs.getLong("account_id"));
+            Customer cust = new Customer();
+            cust.setId(rs.getLong("customer_id"));
+            cust.setHomeCountry(rs.getString("home_country"));
+            acc.setCustomer(cust);
+            txn.setAccount(acc);
+
+            Device dev = new Device();
+            dev.setId(rs.getLong("device_id"));
+            txn.setDevice(dev);
+
+            txn.setAmount(rs.getBigDecimal("amount"));
+            txn.setCurrency(rs.getString("currency"));
+            txn.setCountry(rs.getString("country"));
+            Timestamp ts = rs.getTimestamp("txn_time");
+            txn.setTxnTime(ts.toInstant());
+            txn.setChannel(rs.getString("channel"));
+
+            replayContext.prepareForTransaction(txn);
+
+            for (Rule rule : rules) {
+                Optional<RuleHit> hitOpt = rule.evaluate(txn, replayContext);
+                if (hitOpt.isPresent()) {
+                    RuleHit hit = hitOpt.get();
+                    pendingAlerts.add(new Object[]{
+                            txn.getId(),
+                            hit.getRuleName(),
+                            hit.getSeverity().name(),
+                            AlertStatus.OPEN.name(),
+                            hit.getReason(),
+                            Timestamp.from(Instant.now()),
+                            Timestamp.from(Instant.now())
+                    });
+                    counter[1]++;
+                }
             }
-            pageNumber++;
-        } while (page.hasNext());
+
+            replayContext.updateAfterTransaction(txn);
+            counter[0]++;
+        });
+
+        // Batch insert generated alerts into alerts table
+        String insertAlertSql = "INSERT INTO alerts (txn_id, rule_name, severity, status, reason, created_at, updated_at) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id";
+
+        String insertAuditSql = "INSERT INTO audit_log (alert_id, action, actor, old_status, new_status, details, created_at) " +
+                "VALUES (?, 'CREATED', 'system', NULL, 'OPEN', ?, ?)";
+
+        List<Object[]> auditEntries = new ArrayList<>();
+
+        for (Object[] alertParams : pendingAlerts) {
+            Long alertId = jdbcTemplate.queryForObject(
+                    insertAlertSql,
+                    Long.class,
+                    alertParams[0], alertParams[1], alertParams[2], alertParams[3], alertParams[4], alertParams[5], alertParams[6]
+            );
+            auditEntries.add(new Object[]{
+                    alertId,
+                    "Replay alert created by " + alertParams[1] + ": " + alertParams[4],
+                    alertParams[5]
+            });
+        }
+
+        if (!auditEntries.isEmpty()) {
+            jdbcTemplate.batchUpdate(insertAuditSql, auditEntries);
+        }
 
         long elapsedMs = System.currentTimeMillis() - startTime;
         Map<String, Object> result = new HashMap<>();
-        result.put("totalTransactions", totalProcessed);
-        result.put("alertsGenerated", totalAlerts);
+        result.put("totalTransactions", counter[0]);
+        result.put("alertsGenerated", counter[1]);
         result.put("executionTimeMs", elapsedMs);
         return result;
     }
