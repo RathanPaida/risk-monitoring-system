@@ -22,4 +22,4 @@
 | RMS-018 | JaCoCo 80%+ Backend Line Coverage Enforcement | Phase 6 | QA Engineer | Done |
 | RMS-019 | pytest-cov 80%+ Python Test Coverage Enforcement | Phase 6 | QA Engineer | Done |
 | RMS-020 | GitHub Actions Multi-Job CI Workflow | Phase 6 | DevOps | Done |
-| RMS-021 | Comprehensive README, Demo Script & Release Tag | Phase 7 | Tech Lead | Backlog |
+| RMS-021 | Comprehensive README, Demo Script & Release Tag | Phase 7 | Tech Lead | Done |

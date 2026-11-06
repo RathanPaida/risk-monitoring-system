@@ -5,9 +5,11 @@
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.5-brightgreen.svg)
 ![Python](https://img.shields.io/badge/Python-3.10%2F3.11-blue.svg)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16%2F18-blue.svg)
+![JaCoCo](https://img.shields.io/badge/JaCoCo%20Coverage-83.9%25-brightgreen.svg)
+![pytest-cov](https://img.shields.io/badge/pytest--cov-93.1%25-brightgreen.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
-A high-performance banking risk platform that ingests high-volume transactions (100K+ records), flags suspicious activity using both deterministic rules and an unsupervised machine learning model (Isolation Forest), and routes alerts through a role-based review and escalation workflow supported by an immutable audit trail.
+A high-performance banking risk platform that ingests high-volume transactions (**100K+ records**), flags suspicious activity using both deterministic rules and an unsupervised machine learning model (Isolation Forest), and routes alerts through a role-based review and escalation workflow supported by a database-enforced immutable audit trail.
 
 ---
 
@@ -16,30 +18,58 @@ A high-performance banking risk platform that ingests high-volume transactions (
 | Capability | Implementation & Proof Point |
 |---|---|
 | **Spring Boot REST Service & PostgreSQL** | Robust REST API, Flyway migrations (`V1`-`V3`), OpenAPI / Swagger UI at `/swagger-ui.html` |
-| **High-Volume Ingestion** | Generates and loads **100,000+** realistic synthetic financial transactions over 90 days |
-| **Deterministic Rule Engine** | 4 configurable fraud detection rules: Velocity, Unusual Amount, Geo-Mismatch, New Device |
-| **Stateful Alert Workflow** | Finite state machine (`OPEN` $\rightarrow$ `IN_REVIEW` $\rightarrow$ `ESCALATED` $\rightarrow$ `CLOSED`) |
-| **Role-Based Access Control (RBAC)** | Strict privilege separation between `ANALYST` and `MANAGER` via Spring Security |
-| **Immutable Audit Log** | PostgreSQL trigger prevents `UPDATE` and `DELETE` on audit log; verified by automated tests |
-| **Unsupervised ML Anomaly Detection** | Isolation Forest model trained on time-based split, benchmarked against rules on precision, recall, and FPR |
-| **High Test Coverage** | Java 83.9% line coverage via JaCoCo; Python 93.1% coverage via `pytest-cov` (≥80% build & CI enforced) |
-| **DevOps & CI/CD** | Multi-stage Docker build, Docker Compose, automated GitHub Actions CI pipeline |
+| **High-Volume Ingestion** | Generates and loads **105,000** realistic synthetic transactions over 90 days with 1,795 frauds across 5 patterns |
+| **High-Performance Rule Engine** | 4 configurable fraud detection rules; replayed **105,000 transactions in 973 ms** generating **4,019 alerts** |
+| **Stateful Alert Workflow** | Finite state machine (`OPEN` $\rightarrow$ `IN_REVIEW` $\rightarrow$ `ESCALATED` $\rightarrow$ `CLOSED_CONFIRMED` / `CLOSED_FALSE_POSITIVE`) |
+| **Role-Based Access Control (RBAC)** | Strict privilege separation between `ANALYST` and `MANAGER` via Spring Security HTTP Basic & method security |
+| **Immutable Audit Log** | PostgreSQL trigger prevents `UPDATE` and `DELETE` on audit log; verified by automated integration tests |
+| **Unsupervised ML Anomaly Detection** | Isolation Forest model trained on time-based split with zero target leakage, benchmarked against rules |
+| **High Test Coverage** | Java **83.9%** line coverage via JaCoCo; Python **93.1%** coverage via `pytest-cov` (≥80% enforced in build & CI) |
+| **DevOps & CI/CD** | Multi-stage Docker build, Docker Compose, automated multi-job GitHub Actions CI pipeline |
+
+---
+
+## Architecture Diagram
+
+```mermaid
+flowchart TD
+    Client["Client / Analyst / External System"] -->|HTTP / REST API| Controller["Spring Boot REST Controllers"]
+    
+    subgraph SpringBoot["Spring Boot Backend (Java 17/25)"]
+        Controller --> Security["Spring Security (RBAC: ANALYST, MANAGER)"]
+        Security --> TxnService["Transaction Service"]
+        Security --> AlertService["Alert Service (State Machine)"]
+        Security --> AuditService["Audit Service"]
+        
+        TxnService --> RuleEngine["Deterministic Rule Engine"]
+        RuleEngine --> R1["VelocityRule (10 min sliding window)"]
+        RuleEngine --> R2["UnusualAmountRule (30-day mean comparison)"]
+        RuleEngine --> R3["GeoMismatchRule (Hop time vs home country)"]
+        RuleEngine --> R4["NewDeviceRule (Device history check)"]
+    end
+
+    subgraph DataStore["PostgreSQL 16/18 Database"]
+        TxnService -->|Ingest / Batch| TxnTable[("transactions (105K rows)")]
+        RuleEngine -->|Persist Alerts| AlertTable[("alerts (4,019 rows)")]
+        AuditService -->|Append-Only| AuditTable[("audit_log (Trigger-Locked)")]
+    end
+
+    subgraph MLPipeline["Python ML Pipeline"]
+        TxnTable -.-> FeatureEng["features.py (10 Temporal & Categorical Features)"]
+        FeatureEng -.-> IFModel["train_isolation_forest.py (Time Split Train)"]
+        IFModel -.-> EvalReport["evaluate.py (Benchmark: Rules vs ML vs Combined)"]
+    end
+```
 
 ---
 
 ## Tech Stack
 
-- **Backend:** Java 17+, Spring Boot 3.x, Maven, Spring Web, Spring Data JPA, Spring Security, Flyway, Springdoc OpenAPI (Swagger UI)
+- **Backend:** Java 17+, Spring Boot 3.2.5, Maven, Spring Web, Spring Data JPA, Spring Security, Flyway, Springdoc OpenAPI
 - **Database:** PostgreSQL 16+
 - **Machine Learning & Data:** Python 3.10+, pandas, numpy, scikit-learn, Faker, psycopg2, matplotlib, pytest, pytest-cov
 - **Testing:** JUnit 5, Mockito, Spring Boot Test, JaCoCo, pytest
-- **DevOps:** Docker, Docker Compose, GitHub Actions
-
----
-
-## Architecture
-
-See [docs/architecture.md](docs/architecture.md) for full architectural documentation and Mermaid diagrams.
+- **DevOps:** Docker, Docker Compose, GitHub Actions CI
 
 ---
 
@@ -55,64 +85,46 @@ See [docs/architecture.md](docs/architecture.md) for full architectural document
 ```bash
 docker compose up -d
 ```
+Both the PostgreSQL database and Spring Boot backend container start up automatically.
 
 ### 3. Running Locally
 ```bash
-# 1. Generate Synthetic Transactions (105,000 txns, 1.5% fraud)
+# 1. Generate Synthetic Transactions (105,000 txns, 1.7% fraud)
 python ml/generate_data.py
 
-# 2. Run Python Generator Tests
+# 2. Run Python Generator & Feature Tests
 pytest ml/tests/ -v
 
-# 3. Backend (compiles on Java 17+, starts Flyway migrations V1-V3)
+# 3. Start Backend (runs Flyway migrations V1-V3 automatically)
 cd backend
 mvn clean spring-boot:run
 
-# 4. Load Data into PostgreSQL (loads 105,000 txns & reference tables)
+# 4. Load Data into PostgreSQL (loads 105,000 txns & reference tables in ~8 seconds)
 python ml/load_data.py --port 5433
 
-# 5. Replay Historical Transactions through Rule Engine
+# 5. Replay Historical Transactions through High-Performance Rule Engine
 curl -u manager1:Manager123! -X POST http://localhost:8080/api/admin/replay
-# Output: {"totalTransactions": 105000, "alertsGenerated": 4102, "executionTimeMs": 1233}
+# Output: {"totalTransactions": 105000, "alertsGenerated": 4019, "executionTimeMs": 973}
 
-# 6. Verify PostgreSQL Transaction & Alert Counts
+# 6. Verify Database Record Counts
 # SELECT count(*) FROM transactions;  --> 105,000
-# SELECT count(*) FROM alerts;        --> 4,102
-# SELECT count(*) FROM audit_log;     --> 4,102
+# SELECT count(*) FROM alerts;        --> 4,019
+# SELECT count(*) FROM audit_log;     --> 4,019
 
-# 7. Run Backend Integration & Security Tests
+# 7. Run Backend Integration & Security Tests (Verifies RBAC, State Machine & DB Trigger)
 cd backend
-mvn test
-# Result: 31 tests passing (Rule tests, Security RBAC, State Machine, and Audit Log Immutability)
+mvn verify
+# Result: 71 tests passing, 83.9% line coverage enforced
 
 # 8. Train and Evaluate Machine Learning Model (Isolation Forest)
 cd ..
 python ml/train_isolation_forest.py
 python ml/evaluate.py --port 5433
-# Runs out-of-time evaluation benchmarking Rules vs ML, produces ml/reports/evaluation.md & PNG plots
+# Evaluates on out-of-time test split and writes ml/reports/evaluation.md & charts
 ```
 
----
-
-## Machine Learning & Evaluation Benchmark
-
-We benchmarked the **Deterministic Rule Engine (4 rules)** against an **Unsupervised Isolation Forest** model and an **Ensemble Hybrid (Rules OR ML)** on an out-of-time test split of **24,150 transactions** (20.7 days, 399 ground-truth frauds):
-
-| Detection Strategy | Precision | Recall | F1 Score | False Positive Rate (FPR) | Total Alerts | Alerts / Day |
-|---|---|---|---|---|---|---|
-| **Rules Only** | 33.38% | 64.91% | 0.4409 | 2.18% | 776 | 37.4 |
-| **Isolation Forest (ML)** | 27.05% | 40.60% | 0.3246 | 1.84% | 599 | 28.9 |
-| **Combined (Rules OR ML)** | 24.59% | **67.42%** | 0.3603 | 3.47% | 1,094 | 52.7 |
-
-### Visualizations & Detailed Report
-- **Metrics Comparison Plot:** `ml/reports/metrics_comparison.png`
-- **Analyst Workload Trade-off Plot:** `ml/reports/workload_tradeoff.png`
-- **Full In-Depth Report:** See [ml/reports/evaluation.md](ml/reports/evaluation.md) for detailed discussion on where deterministic rules outperform ML (auditability, deterministic edge cases), where Isolation Forest wins (subtle multi-dimensional shifts), and real-world triage trade-offs.
-
----
-
 ### 4. Interactive Swagger UI
-Access the Swagger UI at:
+Access the interactive OpenAPI UI at:
 `http://localhost:8080/swagger-ui.html`
 
 Demo Credentials:
@@ -121,9 +133,57 @@ Demo Credentials:
 
 ---
 
-## SDLC Documentation
+## Machine Learning & Evaluation Benchmark
+
+We benchmarked the **Deterministic 4-Rule Engine** against an **Unsupervised Isolation Forest** model and an **Ensemble Hybrid (Rules OR ML)** on an out-of-time test split of **24,150 transactions** (20.7 days, 399 ground-truth frauds):
+
+| Detection Strategy | Precision | Recall | F1 Score | False Positive Rate (FPR) | Total Alerts | Alerts / Day |
+|---|---|---|---|---|---|---|
+| **Rules Only** | **33.38%** | 64.91% | **0.4409** | 2.18% | 776 | 37.4 |
+| **Isolation Forest (ML)** | 27.05% | 40.60% | 0.3246 | **1.84%** | 599 | **28.9** |
+| **Combined (Rules OR ML)** | 24.59% | **67.42%** | 0.3603 | 3.47% | 1,094 | 52.7 |
+
+### Visualizations & Report
+- **Metrics Comparison Plot:** `ml/reports/metrics_comparison.png`
+- **Analyst Workload Trade-off Plot:** `ml/reports/workload_tradeoff.png`
+- **In-Depth Technical Discussion:** See [ml/reports/evaluation.md](ml/reports/evaluation.md) for detailed analysis of trade-offs.
+
+---
+
+## Design Decisions & Trade-offs
+
+1. **Dual Detection (Rules + ML):** Deterministic rules provide instantaneous, auditable, regulatory-compliant alerts with specific reason codes. The unsupervised Isolation Forest detects multi-dimensional anomalies where individual attributes do not breach static rule thresholds.
+2. **Fast Stream Replay Architecture:** Replaying 105,000 transactions sequentially through per-transaction SQL lookups would take over 7 minutes. By implementing `FastReplayContext` (sliding in-memory deque windows executing the exact same `Rule` interface), replay executes in **973 ms** with zero code duplication.
+3. **Database-Level Audit Immutability:** Rather than relying exclusively on application code, a PostgreSQL trigger (`V2__audit_immutable.sql`) rejects `UPDATE` and `DELETE` queries directly at the database engine level. Even a compromised application service or direct DB console user cannot alter audit history.
+4. **Time-Based Train/Test Split:** Random K-fold cross validation causes temporal data leakage in fraud detection. We enforce a strict temporal cut (first 70 days train, subsequent 20.7 days test) ensuring models only learn from historical patterns.
+
+---
+
+## Known Limitations
+
+1. **Synthetic Data:** Data is synthetically generated using Faker and distribution modeling. Real production distributions contain non-stationary drift and seasonality.
+2. **Rule Thresholds:** Thresholds ($500 minimum, 5 txns/10 min, 10x mean) are illustrative defaults and should be tuned per risk appetite.
+3. **Authentication:** Uses HTTP Basic Auth over HTTPS for simplicity. Production deployments should utilize OAuth2 / OIDC with JWT tokens and short lifetimes.
+4. **Single-Node Execution:** The current engine runs on a single node. For horizontal scale, transactions would stream via Apache Kafka or AWS Kinesis to partition-keyed processing workers.
+
+---
+
+## Interview Talking Points
+
+- **Why both rules and ML?** Rules are explainable, auditable, and cheap; ML catches subtle multi-dimensional patterns no human wrote a rule for. The evaluation showed combining both boosted recall to 67.42%.
+- **Why an out-of-time split?** In financial fraud, future information leaks backwards if random shuffling is used. A chronological cut mirrors real-world production deployment.
+- **Why enforce audit immutability in SQL?** Application bugs, ORM misconfigurations, or compromised credentials cannot rewrite history when the database engine blocks updates.
+- **Alert volume vs precision trade-off:** Lowering thresholds increases fraud capture but swells analyst fatigue (from 37 to 53 alerts/day). High-risk alerts should trigger auto-blocks while medium alerts enter human review.
+- **Next architecture iterations:** Streaming ingestion with Apache Kafka, analyst decision feedback loop for continuous supervised retraining (XGBoost/LightGBM), and dynamic rule authoring.
+
+---
+
+## SDLC Documentation & Links
+
+- [docs/demo-walkthrough.md](docs/demo-walkthrough.md): 2-minute step-by-step live demo script with curl commands
 - [docs/requirements.md](docs/requirements.md): Functional and non-functional requirements
 - [docs/user-stories.md](docs/user-stories.md): 10 user stories with acceptance criteria
-- [docs/architecture.md](docs/architecture.md): Architecture diagram and component breakdown
+- [docs/architecture.md](docs/architecture.md): Architecture diagrams and component specifications
 - [docs/api.md](docs/api.md): REST API endpoints documentation
-- [docs/sprint-board.md](docs/sprint-board.md): Sprint task tracking board
+- [docs/sprint-board.md](docs/sprint-board.md): Complete sprint task tracking board
+- [ml/reports/evaluation.md](ml/reports/evaluation.md): Machine learning evaluation report
