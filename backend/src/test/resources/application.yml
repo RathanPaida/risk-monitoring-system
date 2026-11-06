@@ -1,0 +1,33 @@
+server:
+  port: 0
+
+spring:
+  application:
+    name: riskmonitor-test
+  datasource:
+    url: jdbc:h2:mem:riskmonitortest;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+  flyway:
+    enabled: false
+
+rules:
+  velocity:
+    window-minutes: 10
+    threshold-medium: 5
+    threshold-high: 10
+  unusual-amount:
+    multiplier-medium: 5.0
+    multiplier-high: 10.0
+    min-amount: 500.0
+    trailing-days: 30
+  geo-mismatch:
+    hop-window-minutes: 60
+  new-device:
+    min-amount-low: 200.0
+    min-amount-medium: 1000.0

@@ -64,12 +64,15 @@ python ml/generate_data.py
 # 2. Run Python Generator Tests
 pytest ml/tests/ -v
 
-# 3. Backend
+# 3. Backend (compiles on Java 17+, starts Flyway migrations V1-V3)
 cd backend
 mvn clean spring-boot:run
 
-# 4. Load Data into PostgreSQL
-python ml/load_data.py
+# 4. Load Data into PostgreSQL (loads 105,000 txns & reference tables)
+python ml/load_data.py --port 5433
+
+# 5. Verify PostgreSQL Transaction Count
+# SELECT count(*) FROM transactions; (Returns 105,000)
 ```
 
 ### 4. Interactive Swagger UI

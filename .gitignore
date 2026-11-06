@@ -47,6 +47,10 @@ htmlcov/
 *.joblib
 *.pkl
 
+# PostgreSQL cluster
+pgdata/
+logfile
+
 # Data directory
 data/
 *.csv

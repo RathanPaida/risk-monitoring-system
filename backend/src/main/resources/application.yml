@@ -1,0 +1,49 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  application:
+    name: riskmonitor
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:riskmonitor}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    show-sql: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+# Fraud Rule Engine Configuration
+rules:
+  velocity:
+    window-minutes: 10
+    threshold-medium: 5
+    threshold-high: 10
+  unusual-amount:
+    multiplier-medium: 5.0
+    multiplier-high: 10.0
+    min-amount: 500.0
+    trailing-days: 30
+  geo-mismatch:
+    hop-window-minutes: 60
+  new-device:
+    min-amount-low: 200.0
+    min-amount-medium: 1000.0
