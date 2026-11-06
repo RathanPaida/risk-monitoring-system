@@ -79,6 +79,11 @@ curl -u manager1:Manager123! -X POST http://localhost:8080/api/admin/replay
 # SELECT count(*) FROM transactions;  --> 105,000
 # SELECT count(*) FROM alerts;        --> 4,102
 # SELECT count(*) FROM audit_log;     --> 4,102
+
+# 7. Run Backend Integration & Security Tests
+cd backend
+mvn test
+# Result: 31 tests passing (Rule tests, Security RBAC, State Machine, and Audit Log Immutability)
 ```
 
 ### 4. Interactive Swagger UI
