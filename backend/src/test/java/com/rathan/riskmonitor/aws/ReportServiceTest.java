@@ -83,3 +83,4 @@ class ReportServiceTest {
         assertThat(reports.get(0).getStorageType()).isEqualTo("LOCAL");
     }
 }
+

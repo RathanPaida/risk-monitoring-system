@@ -29,3 +29,4 @@ def test_upload_artifacts_to_s3(tmp_path):
 
         # Verify S3 upload calls
         assert mock_s3.upload_file.call_count == 4
+

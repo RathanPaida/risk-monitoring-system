@@ -168,3 +168,4 @@ class DynamoDbDeduplicationServiceTest {
         verifyNoInteractions(dynamoDbClient);
     }
 }
+

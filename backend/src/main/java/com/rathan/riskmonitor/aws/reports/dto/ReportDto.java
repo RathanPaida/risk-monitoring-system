@@ -71,3 +71,4 @@ public class ReportDto {
         this.storageType = storageType;
     }
 }
+

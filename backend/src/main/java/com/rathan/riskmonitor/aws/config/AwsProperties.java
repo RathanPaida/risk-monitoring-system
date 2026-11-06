@@ -158,3 +158,4 @@ public class AwsProperties {
         this.dynamodb = dynamodb;
     }
 }
+

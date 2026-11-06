@@ -23,3 +23,7 @@
 | RMS-019 | pytest-cov 80%+ Python Test Coverage Enforcement | Phase 6 | QA Engineer | Done |
 | RMS-020 | GitHub Actions Multi-Job CI Workflow | Phase 6 | DevOps | Done |
 | RMS-021 | Comprehensive README, Demo Script & Release Tag | Phase 7 | Tech Lead | Done |
+| RMS-022 | Scheduled S3 Ingestion & Multi-Threaded Worker Pool | Phase 8 (AWS) | Cloud / Backend | Done |
+| RMS-023 | DynamoDB Conditional Write Distributed Deduplication | Phase 8 (AWS) | Cloud / Backend | Done |
+| RMS-024 | Cloud Model & Report Storage with Manager API | Phase 8 (AWS) | ML / Backend | Done |
+| RMS-025 | Concurrency Tests, CI Validation & v2.0-aws Tag | Phase 8 (AWS) | QA / DevOps | Done |

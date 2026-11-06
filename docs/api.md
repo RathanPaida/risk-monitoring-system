@@ -181,3 +181,33 @@ Authentication: **HTTP Basic Auth** (`Authorization: Basic <base64(username:pass
 - **Method / Path:** `GET /actuator/health`
 - **Roles:** Public / Unauthenticated
 - **Response `200 OK`:** `{"status": "UP"}`
+
+---
+
+## 5. Reports & Model Artifacts Endpoints
+
+### 5.1 List Machine Learning Reports & Models
+- **Method / Path:** `GET /api/reports`
+- **Roles:** `MANAGER` only (`ROLE_MANAGER`).
+- **Response `200 OK`:** List of model binaries and evaluation reports stored in AWS S3 (or local fallbacks).
+  ```json
+  [
+    {
+      "name": "isolation_forest.joblib",
+      "key": "models/isolation_forest.joblib",
+      "category": "MODEL",
+      "sizeBytes": 938009,
+      "lastModified": "2026-11-06T15:17:00Z",
+      "storageType": "S3"
+    },
+    {
+      "name": "evaluation_summary.json",
+      "key": "reports/evaluation_summary.json",
+      "category": "REPORT",
+      "sizeBytes": 1420,
+      "lastModified": "2026-11-06T15:21:00Z",
+      "storageType": "S3"
+    }
+  ]
+  ```
+- **Errors:** `401 Unauthorized` for unauthenticated requests, `403 Forbidden` for analysts.
