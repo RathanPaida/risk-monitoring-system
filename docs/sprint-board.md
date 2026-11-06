@@ -19,7 +19,7 @@
 | RMS-015 | Feature Engineering Pipeline (Zero Target Leakage) | Phase 5 | ML Engineer | Done |
 | RMS-016 | Isolation Forest Anomaly Detection Model | Phase 5 | ML Engineer | Done |
 | RMS-017 | Rules vs ML Benchmark Evaluation & Reporting | Phase 5 | ML Engineer | Done |
-| RMS-018 | JaCoCo 80%+ Backend Line Coverage Enforcement | Phase 6 | QA Engineer | Backlog |
-| RMS-019 | pytest-cov 80%+ Python Test Coverage Enforcement | Phase 6 | QA Engineer | Backlog |
-| RMS-020 | GitHub Actions Multi-Job CI Workflow | Phase 6 | DevOps | Backlog |
+| RMS-018 | JaCoCo 80%+ Backend Line Coverage Enforcement | Phase 6 | QA Engineer | Done |
+| RMS-019 | pytest-cov 80%+ Python Test Coverage Enforcement | Phase 6 | QA Engineer | Done |
+| RMS-020 | GitHub Actions Multi-Job CI Workflow | Phase 6 | DevOps | Done |
 | RMS-021 | Comprehensive README, Demo Script & Release Tag | Phase 7 | Tech Lead | Backlog |

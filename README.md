@@ -22,7 +22,7 @@ A high-performance banking risk platform that ingests high-volume transactions (
 | **Role-Based Access Control (RBAC)** | Strict privilege separation between `ANALYST` and `MANAGER` via Spring Security |
 | **Immutable Audit Log** | PostgreSQL trigger prevents `UPDATE` and `DELETE` on audit log; verified by automated tests |
 | **Unsupervised ML Anomaly Detection** | Isolation Forest model trained on time-based split, benchmarked against rules on precision, recall, and FPR |
-| **High Test Coverage** | Java 80%+ line coverage via JaCoCo; Python 80%+ coverage via `pytest-cov` |
+| **High Test Coverage** | Java 83.9% line coverage via JaCoCo; Python 93.1% coverage via `pytest-cov` (≥80% build & CI enforced) |
 | **DevOps & CI/CD** | Multi-stage Docker build, Docker Compose, automated GitHub Actions CI pipeline |
 
 ---
