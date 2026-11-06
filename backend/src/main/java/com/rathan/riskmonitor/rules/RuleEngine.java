@@ -32,7 +32,7 @@ public class RuleEngine {
     @Transactional
     public List<Alert> processTransaction(Transaction transaction) {
         Customer customer = transaction.getAccount() != null ? transaction.getAccount().getCustomer() : null;
-        RuleContext context = new RuleContext(transactionRepository, customer);
+        RuleContext context = new DefaultRuleContext(transactionRepository, customer);
 
         List<Alert> generatedAlerts = new ArrayList<>();
         for (Rule rule : rules) {
