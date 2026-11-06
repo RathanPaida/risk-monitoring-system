@@ -58,12 +58,17 @@ docker compose up -d
 
 ### 3. Running Locally
 ```bash
-# Backend
+# 1. Generate Synthetic Transactions (105,000 txns, 1.5% fraud)
+python ml/generate_data.py
+
+# 2. Run Python Generator Tests
+pytest ml/tests/ -v
+
+# 3. Backend
 cd backend
 mvn clean spring-boot:run
 
-# Data Generation & Ingestion
-python ml/generate_data.py
+# 4. Load Data into PostgreSQL
 python ml/load_data.py
 ```
 
