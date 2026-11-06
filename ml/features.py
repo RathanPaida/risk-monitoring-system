@@ -57,7 +57,7 @@ def extract_features(
     amounts = df["amount"].to_numpy(dtype=float)
     account_ids = df["account_id"].to_numpy()
     device_ids = df["device_id"].to_numpy()
-    timestamps = df["txn_time"].astype("int64").to_numpy()
+    timestamps = pd.to_datetime(df["txn_time"], utc=True).to_numpy(dtype="datetime64[ns]").astype("int64")
 
     n = len(df)
     amount_to_30d_mean = np.ones(n, dtype=float)

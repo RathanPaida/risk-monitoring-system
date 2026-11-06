@@ -34,16 +34,7 @@ class AlertWorkflowSecurityTest {
     private TransactionRepository transactionRepository;
 
     @Autowired
-    private CustomerRepository customerRepository;
-
-    @Autowired
-    private AccountRepository accountRepository;
-
-    @Autowired
-    private MerchantRepository merchantRepository;
-
-    @Autowired
-    private DeviceRepository deviceRepository;
+    private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -52,24 +43,14 @@ class AlertWorkflowSecurityTest {
 
     @BeforeEach
     void setUp() {
-        Transaction txn = transactionRepository.findAll().stream().findFirst().orElseGet(() -> {
-            Customer cust = customerRepository.save(new Customer(9001L, "Test Cust", "US", Instant.now()));
-            Account acc = accountRepository.save(new Account(9001L, cust, "CHECKING", Instant.now(), "ACTIVE"));
-            Merchant merch = merchantRepository.save(new Merchant(9001L, "Test Merch", "RETAIL", "US"));
-            Device dev = deviceRepository.save(new Device(9001L, cust, "hash9001", Instant.now()));
-            Transaction newTxn = new Transaction();
-            newTxn.setId(9001L);
-            newTxn.setAccount(acc);
-            newTxn.setMerchant(merch);
-            newTxn.setDevice(dev);
-            newTxn.setAmount(BigDecimal.valueOf(100.00));
-            newTxn.setCurrency("USD");
-            newTxn.setCountry("US");
-            newTxn.setTxnTime(Instant.now());
-            newTxn.setChannel("WEB");
-            newTxn.setCreatedAt(Instant.now());
-            return transactionRepository.save(newTxn);
-        });
+        jdbcTemplate.update("INSERT INTO customers (id, name, home_country, created_at) VALUES (9001, 'Test Cust', 'US', NOW()) ON CONFLICT DO NOTHING");
+        jdbcTemplate.update("INSERT INTO accounts (id, customer_id, account_type, opened_at, status) VALUES (9001, 9001, 'CHECKING', NOW(), 'ACTIVE') ON CONFLICT DO NOTHING");
+        jdbcTemplate.update("INSERT INTO merchants (id, name, category, country) VALUES (9001, 'Test Merch', 'RETAIL', 'US') ON CONFLICT DO NOTHING");
+        jdbcTemplate.update("INSERT INTO devices (id, customer_id, device_hash, first_seen_at) VALUES (9001, 9001, 'hash9001', NOW()) ON CONFLICT DO NOTHING");
+        jdbcTemplate.update("INSERT INTO transactions (id, account_id, merchant_id, device_id, amount, currency, country, txn_time, channel, created_at) " +
+                "VALUES (9001, 9001, 9001, 9001, 100.00, 'USD', 'US', NOW(), 'WEB', NOW()) ON CONFLICT DO NOTHING");
+
+        Transaction txn = transactionRepository.findById(9001L).orElseThrow();
         Alert alert = alertService.createAlert(txn, "TestRule", AlertSeverity.HIGH, "Test initial alert");
         testAlertId = alert.getId();
     }
