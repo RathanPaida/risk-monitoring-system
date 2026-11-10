@@ -261,3 +261,4 @@ To execute and verify these benchmarks without altering production business logi
 4. `benchmarks/database_query_benchmarks.py`: Automated Python profiling harness using `EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)`.
 5. `backend/src/test/java/com/rathan/riskmonitor/perf/IngestionPerformanceBenchmark.java`: Isolated JVM performance test suite for throughput, configuration grids, rule latency, and idempotency.
 6. `benchmarks/*.json`: Raw measured benchmark output datasets for complete auditability.
+
