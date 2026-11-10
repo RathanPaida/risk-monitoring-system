@@ -1,0 +1,87 @@
+{
+  "grid" : [ {
+    "threads" : 1,
+    "batchSize" : 100,
+    "durationMs" : 4428,
+    "throughputTxnsSec" : 451.6711833785005
+  }, {
+    "threads" : 1,
+    "batchSize" : 500,
+    "durationMs" : 3925,
+    "throughputTxnsSec" : 509.5541401273885
+  }, {
+    "threads" : 1,
+    "batchSize" : 1000,
+    "durationMs" : 4429,
+    "throughputTxnsSec" : 451.56920298035675
+  }, {
+    "threads" : 1,
+    "batchSize" : 2000,
+    "durationMs" : 4308,
+    "throughputTxnsSec" : 464.2525533890436
+  }, {
+    "threads" : 2,
+    "batchSize" : 100,
+    "durationMs" : 2129,
+    "throughputTxnsSec" : 939.4081728511038
+  }, {
+    "threads" : 2,
+    "batchSize" : 500,
+    "durationMs" : 2602,
+    "throughputTxnsSec" : 768.6395080707148
+  }, {
+    "threads" : 2,
+    "batchSize" : 1000,
+    "durationMs" : 3161,
+    "throughputTxnsSec" : 632.7111673521038
+  }, {
+    "threads" : 2,
+    "batchSize" : 2000,
+    "durationMs" : 9369,
+    "throughputTxnsSec" : 213.46995410395988
+  }, {
+    "threads" : 4,
+    "batchSize" : 100,
+    "durationMs" : 1647,
+    "throughputTxnsSec" : 1214.3290831815423
+  }, {
+    "threads" : 4,
+    "batchSize" : 500,
+    "durationMs" : 1603,
+    "throughputTxnsSec" : 1247.6606363069245
+  }, {
+    "threads" : 4,
+    "batchSize" : 1000,
+    "durationMs" : 2540,
+    "throughputTxnsSec" : 787.4015748031496
+  }, {
+    "threads" : 4,
+    "batchSize" : 2000,
+    "durationMs" : 3757,
+    "throughputTxnsSec" : 532.3396326856534
+  }, {
+    "threads" : 8,
+    "batchSize" : 100,
+    "durationMs" : 997,
+    "throughputTxnsSec" : 2008.0321285140562
+  }, {
+    "threads" : 8,
+    "batchSize" : 500,
+    "durationMs" : 1086,
+    "throughputTxnsSec" : 1841.6206261510129
+  }, {
+    "threads" : 8,
+    "batchSize" : 1000,
+    "durationMs" : 2148,
+    "throughputTxnsSec" : 931.0986964618249
+  }, {
+    "threads" : 8,
+    "batchSize" : 2000,
+    "durationMs" : 3720,
+    "throughputTxnsSec" : 537.6344086021505
+  } ],
+  "bestConfig" : "8 threads, batch size 100",
+  "bestThroughput" : 2008.0321285140562,
+  "singleThreadThroughput" : 509.5541401273885,
+  "speedupMultiplier" : 3.9407630522088355
+}

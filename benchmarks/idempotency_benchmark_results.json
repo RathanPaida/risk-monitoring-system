@@ -1,0 +1,7 @@
+{
+  "batchSize" : 500,
+  "duplicatesDetected" : 500,
+  "duplicatesInserted" : 0,
+  "duplicateAlerts" : 0,
+  "idempotentConfirmed" : true
+}

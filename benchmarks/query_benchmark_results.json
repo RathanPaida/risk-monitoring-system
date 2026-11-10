@@ -1,0 +1,70 @@
+[
+  {
+    "name": "Q1: Alerts by Status ordered by Date (Analyst triage queue)",
+    "before": {
+      "median_ms": 0.79,
+      "min_ms": 0.781,
+      "max_ms": 0.896,
+      "plan_types": "Limit, Seq Scan, Sort"
+    },
+    "after": {
+      "median_ms": 0.018,
+      "min_ms": 0.016,
+      "max_ms": 0.021,
+      "plan_types": "Index Scan, Limit"
+    },
+    "speedup": 43.88888888888889,
+    "index_sql": "CREATE INDEX idx_alerts_status_created ON alerts (status, created_at DESC);"
+  },
+  {
+    "name": "Q2: Alerts by Date Range (Audit and compliance reporting)",
+    "before": {
+      "median_ms": 1.041,
+      "min_ms": 1.034,
+      "max_ms": 1.57,
+      "plan_types": "Limit, Seq Scan, Sort"
+    },
+    "after": {
+      "median_ms": 0.015,
+      "min_ms": 0.014,
+      "max_ms": 0.018,
+      "plan_types": "Index Scan, Limit"
+    },
+    "speedup": 69.39999999999999,
+    "index_sql": "CREATE INDEX idx_alerts_created_at ON alerts (created_at DESC);"
+  },
+  {
+    "name": "Q3: Transactions by Merchant and Date Range (Merchant risk assessment)",
+    "before": {
+      "median_ms": 5.98,
+      "min_ms": 5.386,
+      "max_ms": 7.186,
+      "plan_types": "Seq Scan"
+    },
+    "after": {
+      "median_ms": 0.071,
+      "min_ms": 0.07,
+      "max_ms": 0.125,
+      "plan_types": "Bitmap Heap Scan, Bitmap Index Scan"
+    },
+    "speedup": 84.22535211267606,
+    "index_sql": "CREATE INDEX idx_transactions_merchant_time ON transactions (merchant_id, txn_time);"
+  },
+  {
+    "name": "Q4: Alerts by Account (Customer transaction history review)",
+    "before": {
+      "median_ms": 0.355,
+      "min_ms": 0.302,
+      "max_ms": 0.358,
+      "plan_types": "Bitmap Heap Scan, Bitmap Index Scan, Hash, Hash Join, Seq Scan, Sort"
+    },
+    "after": {
+      "median_ms": 0.315,
+      "min_ms": 0.294,
+      "max_ms": 0.329,
+      "plan_types": "Bitmap Heap Scan, Bitmap Index Scan, Hash, Hash Join, Seq Scan, Sort"
+    },
+    "speedup": 1.126984126984127,
+    "index_sql": "CREATE INDEX idx_alerts_txn_created ON alerts (txn_id, created_at DESC);"
+  }
+]
